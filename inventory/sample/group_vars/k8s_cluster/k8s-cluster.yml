@@ -67,7 +67,7 @@ credentials_dir: "{{ inventory_dir }}/credentials"
 
 # Choose network plugin (cilium, calico, kube-ovn, weave or flannel. Use cni for generic cni plugin)
 # Can also be set to 'cloud', which lets the cloud provider setup appropriate routing
-kube_network_plugin: calico
+kube_network_plugin: cilium
 
 # Setting multi_networking to true will install Multus: https://github.com/k8snetworkplumbingwg/multus-cni
 kube_network_plugin_multus: false
@@ -237,7 +237,7 @@ kubernetes_audit: false
 default_kubelet_config_dir: "{{ kube_config_dir }}/dynamic_kubelet_dir"
 
 # Make a copy of kubeconfig on the host that runs Ansible in {{ inventory_dir }}/artifacts
-# kubeconfig_localhost: false
+kubeconfig_localhost: true
 # Use ansible_host as external api ip when copying over kubeconfig.
 # kubeconfig_localhost_ansible_host: false
 # Download kubectl onto the host that runs Ansible in {{ bin_dir }}
