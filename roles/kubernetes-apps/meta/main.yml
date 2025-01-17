@@ -106,6 +106,7 @@ dependencies:
   - role: kubernetes-apps/gateway_api
     when:
       - gateway_api_enabled
+      - not gateway_api_preinstall_before_network
       - inventory_hostname == groups['kube_control_plane'][0]
     tags:
       - gateway_api

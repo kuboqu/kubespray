@@ -1,11 +1,13 @@
 ---
-# cilium_version: "v1.15.9"
+cilium_version: "v1.16.5"
+# envoy_version: "v1.22.5"
+envoy_version: "v1.33.0"
 
 # Log-level
-# cilium_debug: false
+cilium_debug: true
 
 # cilium_mtu: ""
-# cilium_enable_ipv4: true
+cilium_enable_ipv4: true
 # cilium_enable_ipv6: false
 
 # Enable l2 announcement from cilium to replace Metallb Ref: https://docs.cilium.io/en/v1.14/network/l2-announcements/
@@ -45,7 +47,7 @@ cilium_l2announcements: true
 # cilium_tunnel_mode: vxlan
 
 # LoadBalancer Mode (snat/dsr/hybrid) Ref: https://docs.cilium.io/en/stable/network/kubernetes/kubeproxy-free/#dsr-mode
-cilium_loadbalancer_mode: hybrid
+# cilium_loadbalancer_mode: snat
 
 # Optional features
 cilium_enable_prometheus: true
@@ -59,7 +61,7 @@ cilium_enable_prometheus: true
 # Only effective when monitor aggregation is set to "medium" or higher.
 # cilium_monitor_aggregation_flags: "all"
 # Kube Proxy Replacement mode (strict/partial)
-cilium_kube_proxy_replacement: strict
+cilium_kube_proxy_replacement: true
 
 # If upgrading from Cilium < 1.5, you may want to override some of these options
 # to prevent service disruptions. See also:
@@ -200,8 +202,24 @@ cilium_ipam_mode: cluster-pool
 ##    var1: "value1"
 ##    var2: "value2"
 cilium_config_extra_vars:
-  enable-gateway-api: true
-  enable-gateway-api-secrets-sync: true
+  # enable-envoy-config: "true"
+  # envoy-secrets-namespace: "cilium-secrets"
+
+  # enable-ingress-controller: "true"
+  # ingress-default-lb-mode: "dedicated"
+  # enforce-ingress-https: "true"
+  # enable-ingress-proxy-protocol: "true"
+  # enable-ingress-secrets-sync: "true"
+  # ingress-secrets-namespace: "kube-system"
+
+  enable-l2-announcements: "true"
+
+  loadbalancer-l7: "envoy"
+
+  # enable-node-port: "true"
+  enable-gateway-api: "true"
+  enable-gateway-api-secrets-sync: "true"
+  # gateway-api-secrets-namespace: "cilium-secrets"
 
 
 # For adding and mounting extra volumes to the cilium operator
@@ -255,53 +273,54 @@ cilium_enable_bgp_control_plane: true
 
 # -- Configure Loadbalancer IP Pools
 cilium_loadbalancer_ip_pools:
-  - name: "cilium-lb-pool"
+  - name: "cilium"
     cidrs:
       - "172.18.10.0/16"
 
 # -- Configure BGP Instances (New bgpv2 API v1.16+)
-# cilium_bgp_cluster_configs:
-#   - name: "cilium-bgp"
-#     spec:
-#       bgpInstances:
-#       - name: "local-bgp-instance"
-#         localASN: 64512
-#         peers:
-#         - name: "host-peer"
-#           peerASN: 64512
-#           peerAddress: "192.168.64.1"  # Host IP
-#           peerConfigRef:
-#             name: "cilium-peer"
+cilium_bgp_cluster_configs:
+  - name: "cilium-bgp"
+    spec:
+      bgpInstances:
+      - name: "local-bgp-instance"
+        localASN: 64512
+        peers:
+        - name: "host-peer"
+          peerASN: 64512
+          peerAddress: "192.168.64.1"  # Host IP
+          peerConfigRef:
+            name: "cilium-peer"
 
 # -- Configure BGP Peers (New bgpv2 API v1.16+)
-# cilium_bgp_peer_configs:
-#   - name: cilium-peer
-#     spec:
-#       gracefulRestart:
-#         enabled: true
-#         restartTimeSeconds: 15
-#       timers:
-#         connectRetryTimeSeconds: 12
-#         holdTimeSeconds: 9
-#         keepAliveTimeSeconds: 3
-#       families:
-#         - afi: ipv4
-#           safi: unicast
-#           advertisements:
-#             matchLabels:
-#               advertise: "bgp"
+cilium_bgp_peer_configs:
+  - name: cilium-peer
+    spec:
+      gracefulRestart:
+        enabled: true
+        restartTimeSeconds: 15
+      timers:
+        connectRetryTimeSeconds: 12
+        holdTimeSeconds: 9
+        keepAliveTimeSeconds: 3
+      families:
+        - afi: ipv4
+          safi: unicast
+          advertisements:
+            matchLabels:
+              advertise: "bgp"
 
 # -- Configure BGP Advertisements (New bgpv2 API v1.16+)
-# cilium_bgp_advertisements:
-#   - name: bgp-advertisements
-#     labels:
-#       advertise: bgp
-#     spec:
-#       advertisements:
-#         - advertisementType: "Service"
-#           service:
-#             addresses:
-#               - LoadBalancerIP
+cilium_bgp_advertisements:
+  - name: bgp-advertisements
+    labels:
+      advertise: bgp
+    spec:
+      advertisements:
+        - advertisementType: "Service"
+          service:
+            addresses:
+              - LoadBalancerIP
+              - ExternalIP
 
 # -- Configure BGP Node Config Overrides (New bgpv2 API v1.16+)
 # cilium_bgp_node_config_overrides:
@@ -367,20 +386,52 @@ cilium_loadbalancer_ip_pools:
 #       resourceNames:
 #       - toto
 # cilium_clusterrole_rules_operator_extra_vars: []
-# A list of extra rules to add gateway api support
-# cilium_clusterrole_rules_operator_extra_vars:
-#   - apiGroups:
-#     - '"gateway.networking.k8s.io"'
-#     resources:
-#       - backendlbpolicies
-#       - backendtlspolicies
-#       - gatewayclasses
-#       - gateways
-#       - grpcroutes
-#       - httproutes
-#       - referencegrants
-#       - tcproutes
-#       - tlsroutes
-#       - udproutes
-#     verbs:
-#       - '*'
+
+# A list of extra rules to support Gateway API CRDs
+cilium_clusterrole_rules_operator_extra_vars:
+  - apiGroups:
+      - '"gateway.networking.k8s.io"'
+    resources:
+      - gatewayclasses
+      - gatewayclasses/status
+      - gateways
+      - gateways/status
+      - grpcroutes
+      - grpcroutes/status
+      - httproutes
+      - httproutes/status
+      - referencegrants
+      - referencegrants/status
+      - tlsroutes
+      - tlsroutes/status
+    verbs:
+      - '"*"'
+  - apiGroups:
+      - '""'
+    resources:
+      - secrets
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+    - '"networking.k8s.io"'
+    resources:
+      - ingresses
+      - ingressclasses
+    verbs:
+      - '"*"'
+  - apiGroups:
+    - '""'
+    resources:
+      - services
+      - endpoints
+    verbs:
+      - create
+      - update
+      - patch
+      - delete
