@@ -49,6 +49,7 @@
     - { role: kubernetes/kubeadm, tags: kubeadm}
     - { role: kubernetes/node-label, tags: node-label }
     - { role: kubernetes/node-taint, tags: node-taint }
+    - { role: kubernetes-apps/gateway_api, when: "gateway_api_enabled and gateway_api_preinstall_before_network and inventory_hostname == groups['kube_control_plane'][0]", tags: gateway_api }
     - { role: network_plugin, tags: network }
     - { role: kubernetes-apps/kubelet-csr-approver, tags: kubelet-csr-approver }
 

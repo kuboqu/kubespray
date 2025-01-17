@@ -99,6 +99,7 @@ rbd_provisioner_enabled: false
 # Gateway API CRDs
 gateway_api_enabled: true
 gateway_api_experimental_channel: true
+gateway_api_preinstall_before_network: true
 
 # Nginx ingress controller deployment
 ingress_nginx_enabled: false
