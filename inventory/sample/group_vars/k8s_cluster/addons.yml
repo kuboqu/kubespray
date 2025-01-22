@@ -143,7 +143,7 @@ ingress_alb_enabled: false
 # alb_ingress_aws_debug: "false"
 
 # Cert manager deployment
-cert_manager_enabled: false
+cert_manager_enabled: true
 # cert_manager_namespace: "cert-manager"
 # cert_manager_tolerations:
 #   - key: node-role.kubernetes.io/control-plane
@@ -173,7 +173,9 @@ cert_manager_enabled: false
 #     - "1.1.1.1"
 #     - "8.8.8.8"
 
-# cert_manager_controller_extra_args:
+cert_manager_controller_extra_args:
+  - "--enable-gateway-api"
+  - "--feature-gates=ExperimentalGatewayAPISupport=true"
 #   - "--dns01-recursive-nameservers-only=true"
 #   - "--dns01-recursive-nameservers=1.1.1.1:53,8.8.8.8:53"
 
