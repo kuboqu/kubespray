@@ -270,10 +270,10 @@ cilium_config_extra_vars:
 cilium_enable_bgp_control_plane: true
 
 # -- Configure Loadbalancer IP Pools
-cilium_loadbalancer_ip_pools:
-  - name: "cilium"
-    cidrs:
-      - "172.18.10.0/16"
+# cilium_loadbalancer_ip_pools:
+#   - name: "public"
+#     cidrs:
+#       - "172.16.10.0/16"
 
 # -- Configure BGP Instances (New bgpv2 API v1.16+)
 cilium_bgp_cluster_configs:
