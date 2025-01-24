@@ -202,7 +202,7 @@ cilium_ipam_mode: cluster-pool
 ##    var1: "value1"
 ##    var2: "value2"
 cilium_config_extra_vars:
-  # enable-envoy-config: "true"
+  enable-envoy-config: "true"
   # envoy-secrets-namespace: "cilium-secrets"
 
   # enable-ingress-controller: "true"
@@ -211,8 +211,6 @@ cilium_config_extra_vars:
   # enable-ingress-proxy-protocol: "true"
   # enable-ingress-secrets-sync: "true"
   # ingress-secrets-namespace: "kube-system"
-
-  enable-l2-announcements: "true"
 
   loadbalancer-l7: "envoy"
 
