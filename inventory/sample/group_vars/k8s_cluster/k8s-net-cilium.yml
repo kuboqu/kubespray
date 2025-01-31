@@ -1,7 +1,11 @@
 ---
-cilium_version: "v1.16.5"
+# cilium_version: "v1.15.9"
+# cilium_version: "v1.15.8"
+cilium_version: "v1.16.6"
+# cilium_version: "v1.17.0-rc.2"
 # envoy_version: "v1.22.5"
-envoy_version: "v1.33.0"
+# envoy_version: "v1.33.0"
+envoy_version: "v1.31.0"
 
 # Log-level
 cilium_debug: true
@@ -61,7 +65,7 @@ cilium_enable_prometheus: true
 # Only effective when monitor aggregation is set to "medium" or higher.
 # cilium_monitor_aggregation_flags: "all"
 # Kube Proxy Replacement mode (strict/partial)
-cilium_kube_proxy_replacement: true
+# cilium_kube_proxy_replacement: strict
 
 # If upgrading from Cilium < 1.5, you may want to override some of these options
 # to prevent service disruptions. See also:
@@ -161,12 +165,13 @@ cilium_enable_hubble: true
 cilium_enable_hubble_metrics: true
 ### if cilium_enable_hubble_metrics: true
 # cilium_hubble_metrics: {}
-# - dns
-# - drop
-# - tcp
-# - flow
-# - icmp
-# - http
+cilium_hubble_metrics:
+  - dns
+  - drop
+  - tcp
+  - flow
+  - icmp
+  - http
 ### Enable Hubble install
 cilium_hubble_install: true
 ### Enable auto generate certs if cilium_hubble_install: true
@@ -181,7 +186,7 @@ cilium_hubble_tls_generate: true
 
 # IP address management mode for v1.9+.
 # https://docs.cilium.io/en/v1.9/concepts/networking/ipam/
-cilium_ipam_mode: cluster-pool
+# cilium_ipam_mode: cluster-pool
 
 # Extra arguments for the Cilium agent
 # cilium_agent_custom_args: []
@@ -202,22 +207,20 @@ cilium_ipam_mode: cluster-pool
 ##    var1: "value1"
 ##    var2: "value2"
 cilium_config_extra_vars:
-  enable-envoy-config: "true"
-  # envoy-secrets-namespace: "cilium-secrets"
-
-  # enable-ingress-controller: "true"
-  # ingress-default-lb-mode: "dedicated"
-  # enforce-ingress-https: "true"
-  # enable-ingress-proxy-protocol: "true"
-  # enable-ingress-secrets-sync: "true"
-  # ingress-secrets-namespace: "kube-system"
-
-  loadbalancer-l7: "envoy"
-
-  # enable-node-port: "true"
-  enable-gateway-api: "true"
-  enable-gateway-api-secrets-sync: "true"
-  # gateway-api-secrets-namespace: "cilium-secrets"
+  # debug-verbose: "flow" 
+  debug-verbose: "kvstore envoy datapath policy"
+  bpf-lb-sock-hostns: "true"
+  # enable-envoy-config: "true"
+  # loadbalancer-l7: "envoy"
+  # enable-l7-proxy: "true"
+  # loadbalancer-l7-ports: ""
+  # loadbalancer-l7-algorithm: "round_robin"
+  # enable-gateway-api: "true"
+  # enable-gateway-api-secrets-sync: "true"
+  # gateway-api-hostnetwork-enabled: "true"
+  # enable-l2-neigh-discovery: "true"
+  # enable-l2-pod-announcements: "true"
+  # l2-pod-announcements-interface: "eth0"
 
 
 # For adding and mounting extra volumes to the cilium operator
@@ -233,7 +236,7 @@ cilium_config_extra_vars:
 # Make Cilium take ownership over the `/etc/cni/net.d` directory on the node, renaming all non-Cilium CNI configurations to `*.cilium_bak`.
 # This ensures no Pods can be scheduled using other CNI plugins during Cilium agent downtime.
 # Available for Cilium v1.10 and up.
-# cilium_cni_exclusive: true
+cilium_cni_exclusive: false
 
 # Configure the log file for CNI logging with retention policy of 7 days.
 # Disable CNI file logging by setting this field to empty explicitly.
