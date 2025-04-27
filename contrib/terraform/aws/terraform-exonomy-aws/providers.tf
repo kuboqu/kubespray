@@ -9,8 +9,8 @@ terraform {
   }
 
   backend "s3" {
-    bucket = "exonomy-terraform-state"
-    key    = "dev/k8s/terraform.tfstate"
+    bucket = "exonomy-dev-terraform-state"
+    key    = "k8s/terraform.tfstate"
     region = "eu-central-1"
   }
 }
