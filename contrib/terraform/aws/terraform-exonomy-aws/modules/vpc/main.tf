@@ -1,37 +1,217 @@
+# VPC and IGW
 resource "aws_vpc" "main" {
-  cidr_block = var.vpc_cidr
-  tags       = { Name = "${var.environment}-vpc" }
+  cidr_block           = var.vpc_cidr
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = "${var.environment}-vpc"
+  }
 }
 
-resource "aws_subnet" "public" {
-  count             = length(var.public_subnets)
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = element(var.public_subnets, count.index)
-  availability_zone = element(var.azs, count.index)
-  tags              = { Name = "${var.environment}-public-subnet-${count.index + 1}" }
-}
-
-resource "aws_internet_gateway" "gw" {
+resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
-  tags   = { Name = "${var.environment}-igw" }
+
+  tags = {
+    Name = "${var.environment}-igw"
+  }
+}
+########################################################################
+
+# Subnets
+resource "aws_subnet" "public" {
+  count                   = length(var.public_subnets)
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = element(var.public_subnets, count.index)
+  availability_zone       = element(var.azs, count.index)
+  map_public_ip_on_launch = true
+
+  tags = {
+    Name = "${var.environment}-public-subnet-${count.index + 1}"
+  }
 }
 
-resource "aws_security_group" "default" {
-  name        = "${var.environment}-default-sg"
-  description = "Allow all inbound within VPC"
-  vpc_id      = aws_vpc.main.id
+resource "aws_subnet" "private" {
+  count             = length(var.private_subnets)
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = element(var.private_subnets, count.index)
+  availability_zone = element(var.azs, count.index)
+
+  tags = {
+    Name = "${var.environment}-private-subnet-${count.index + 1}"
+  }
+}
+
+resource "aws_subnet" "db" {
+  count             = length(var.db_subnets)
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = element(var.db_subnets, count.index)
+  availability_zone = element(var.azs, count.index)
+
+  tags = {
+    Name = "${var.environment}-db-subnet-${count.index + 1}"
+  }
+}
+
+resource "aws_subnet" "ops" {
+  count             = length(var.ops_subnets)
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = element(var.ops_subnets, count.index)
+  availability_zone = element(var.azs, count.index)
+
+  tags = {
+    Name = "${var.environment}-ops-subnet-${count.index + 1}"
+  }
+}
+########################################################################
+
+# NAT Gateway and Elastic IP
+resource "aws_eip" "nat" {
+  # Removed the deprecated `vpc` argument
+  # vpc = true
+}
+
+resource "aws_nat_gateway" "nat" {
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.public[0].id
+
+  tags = {
+    Name = "${var.environment}-nat-gateway"
+  }
+}
+########################################################################
+
+# Routing Tables
+# Public Route Table
+resource "aws_route_table" "public" {
+  vpc_id = aws_vpc.main.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.igw.id
+  }
+}
+
+resource "aws_route_table_association" "public" {
+  count          = length(aws_subnet.public)
+  subnet_id      = aws_subnet.public[count.index].id
+  route_table_id = aws_route_table.public.id
+}
+
+# Private, DB, OPS Route Tables (with NAT)
+resource "aws_route_table" "private" {
+  vpc_id = aws_vpc.main.id
+
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.nat.id
+  }
+}
+
+resource "aws_route_table_association" "private" {
+  count          = length(aws_subnet.private)
+  subnet_id      = aws_subnet.private[count.index].id
+  route_table_id = aws_route_table.private.id
+}
+
+resource "aws_route_table_association" "db" {
+  count          = length(aws_subnet.db)
+  subnet_id      = aws_subnet.db[count.index].id
+  route_table_id = aws_route_table.private.id
+}
+
+resource "aws_route_table_association" "ops" {
+  count          = length(aws_subnet.ops)
+  subnet_id      = aws_subnet.ops[count.index].id
+  route_table_id = aws_route_table.private.id
+}
+########################################################################
+
+# Security Groups
+# Frontend
+resource "aws_security_group" "fe_sg" {
+  name   = "${var.environment}-fe-sg"
+  vpc_id = aws_vpc.main.id
 
   ingress {
-    cidr_blocks = [var.vpc_cidr]
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
-    cidr_blocks = ["0.0.0.0/0"]
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 }
+
+# Backend
+resource "aws_security_group" "be_sg" {
+  name   = "${var.environment}-be-sg"
+  vpc_id = aws_vpc.main.id
+
+  ingress {
+    from_port       = 80
+    to_port         = 80
+    protocol        = "tcp"
+    security_groups = [aws_security_group.fe_sg.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+# Database
+resource "aws_security_group" "db_sg" {
+  name   = "${var.environment}-db-sg"
+  vpc_id = aws_vpc.main.id
+
+  ingress {
+    from_port       = 3306
+    to_port         = 3306
+    protocol        = "tcp"
+    security_groups = [aws_security_group.be_sg.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+# Ops Node (VPN + K8s Control Plane)
+resource "aws_security_group" "ops_sg" {
+  name   = "${var.environment}-ops-sg"
+  vpc_id = aws_vpc.main.id
+
+  ingress {
+    from_port   = 51820
+    to_port     = 51820
+    protocol    = "udp"
+    cidr_blocks = ["0.0.0.0/0"] # Only for WireGuard/VPN
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+########################################################################
