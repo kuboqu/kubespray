@@ -1,9 +1,9 @@
 module "vpc" {
-  source        = "./modules/vpc"
-  vpc_cidr      = var.vpc_cidr
+  source         = "./modules/vpc"
+  vpc_cidr       = var.vpc_cidr
   public_subnets = var.public_subnets
-  azs           = var.azs
-  environment   = var.environment
+  azs            = var.azs
+  environment    = var.environment
 }
 
 module "nlb" {
@@ -40,5 +40,5 @@ resource "aws_instance" "workload_nodes" {
   key_name               = var.key_pair_name
   vpc_security_group_ids = [module.vpc.default_sg]
 
-  tags = { Name = "${var.environment}-workload-node-${count.index+1}" }
+  tags = { Name = "${var.environment}-workload-node-${count.index + 1}" }
 }

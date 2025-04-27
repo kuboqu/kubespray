@@ -1,6 +1,6 @@
 resource "aws_vpc" "main" {
   cidr_block = var.vpc_cidr
-  tags = { Name = "${var.environment}-vpc" }
+  tags       = { Name = "${var.environment}-vpc" }
 }
 
 resource "aws_subnet" "public" {
@@ -8,7 +8,7 @@ resource "aws_subnet" "public" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = element(var.public_subnets, count.index)
   availability_zone = element(var.azs, count.index)
-  tags              = { Name = "${var.environment}-public-subnet-${count.index+1}" }
+  tags              = { Name = "${var.environment}-public-subnet-${count.index + 1}" }
 }
 
 resource "aws_internet_gateway" "gw" {
