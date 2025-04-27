@@ -133,18 +133,14 @@ resource "aws_security_group" "fe_sg" {
   name   = "${var.environment}-fe-sg"
   vpc_id = aws_vpc.main.id
 
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+  dynamic "ingress" {
+    for_each = var.fe_allowed_rules
+    content {
+      from_port   = ingress.value.from_port
+      to_port     = ingress.value.to_port
+      protocol    = ingress.value.protocol
+      cidr_blocks = [ingress.value.cidr]
+    }
   }
 
   egress {
@@ -160,11 +156,14 @@ resource "aws_security_group" "be_sg" {
   name   = "${var.environment}-be-sg"
   vpc_id = aws_vpc.main.id
 
-  ingress {
-    from_port       = 80
-    to_port         = 80
-    protocol        = "tcp"
-    security_groups = [aws_security_group.fe_sg.id]
+  dynamic "ingress" {
+    for_each = var.be_allowed_rules
+    content {
+      from_port         = ingress.value.from_port
+      to_port           = ingress.value.to_port
+      protocol          = ingress.value.protocol
+      security_groups   = [ingress.value.sg_source]
+    }
   }
 
   egress {
@@ -180,11 +179,14 @@ resource "aws_security_group" "db_sg" {
   name   = "${var.environment}-db-sg"
   vpc_id = aws_vpc.main.id
 
-  ingress {
-    from_port       = 3306
-    to_port         = 3306
-    protocol        = "tcp"
-    security_groups = [aws_security_group.be_sg.id]
+  dynamic "ingress" {
+    for_each = var.db_allowed_rules
+    content {
+      from_port         = ingress.value.from_port
+      to_port           = ingress.value.to_port
+      protocol          = ingress.value.protocol
+      security_groups   = [ingress.value.sg_source]
+    }
   }
 
   egress {
@@ -200,11 +202,14 @@ resource "aws_security_group" "ops_sg" {
   name   = "${var.environment}-ops-sg"
   vpc_id = aws_vpc.main.id
 
-  ingress {
-    from_port   = 51820
-    to_port     = 51820
-    protocol    = "udp"
-    cidr_blocks = ["0.0.0.0/0"] # Only for WireGuard/VPN
+  dynamic "ingress" {
+    for_each = var.ops_allowed_rules
+    content {
+      from_port   = ingress.value.from_port
+      to_port     = ingress.value.to_port
+      protocol    = ingress.value.protocol
+      cidr_blocks = [ingress.value.cidr]
+    }
   }
 
   egress {
