@@ -7,5 +7,5 @@ ops_subnets     = ["10.100.4.0/24"]
 azs             = ["eu-central-1a"]
 
 environment   = "dev"
-ami_id        = "ami-0123456789abcdef0"
-key_pair_name = "bohdan <bohdan@newexchanger.com> t480"
+ami_id        = "ami-03250b0e01c28d196" # Ubuntu Server 24.04 LTS (HVM), SSD Volume Type (64-bit (x86))
+key_pair_name = "bohdan@newexchanger.com"

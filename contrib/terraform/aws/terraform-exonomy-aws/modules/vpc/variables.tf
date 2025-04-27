@@ -9,52 +9,53 @@ variable "environment" {}
 # Security Group Configuration Variables
 
 # Frontend (fe_sg)
-variable "fe_allowed_rules" {
-  description = "List of ingress rules for frontend security group"
+variable "fe_allowed_ingress" {
+  description = "List of frontend ingress rules with flexible sources"
   type = list(object({
     from_port = number
     to_port   = number
     protocol  = string
-    cidr      = string
+    cidr      = optional(string)
+    sg_source = optional(string)
   }))
   default = [
-    { from_port = 80,  to_port = 80,  protocol = "tcp", cidr = "0.0.0.0/0" },
+    { from_port = 80, to_port = 80, protocol = "tcp", cidr = "0.0.0.0/0" },
     { from_port = 443, to_port = 443, protocol = "tcp", cidr = "0.0.0.0/0" }
   ]
 }
 
-# Backend (be_sg)
-variable "be_allowed_rules" {
-  description = "List of ingress rules for backend security group"
+variable "be_allowed_ingress" {
+  description = "Backend ingress rules"
   type = list(object({
     from_port = number
     to_port   = number
     protocol  = string
-    sg_source = string
+    cidr      = optional(string)
+    sg_source = optional(string)
   }))
 }
 
-# Database (db_sg)
-variable "db_allowed_rules" {
-  description = "List of ingress rules for database security group"
+variable "db_allowed_ingress" {
+  description = "Database ingress rules"
   type = list(object({
     from_port = number
     to_port   = number
     protocol  = string
-    sg_source = string
+    cidr      = optional(string)
+    sg_source = optional(string)
   }))
 }
 
-# Ops node (ops_sg)
-variable "ops_allowed_rules" {
-  description = "List of ingress rules for ops security group"
+variable "ops_allowed_ingress" {
+  description = "Ops node ingress rules"
   type = list(object({
     from_port = number
     to_port   = number
     protocol  = string
-    cidr      = string
+    cidr      = optional(string)
+    sg_source = optional(string)
   }))
   default = [
-    { from_port = 51820, to_port = 51820, protocol = "udp", cidr = "0.0.0.0/0" }
+    { from_port = 51820, to_port = 51820, protocol = "udp", cidr = "0.0.0.0/0" } # WireGuard example
   ]
 }

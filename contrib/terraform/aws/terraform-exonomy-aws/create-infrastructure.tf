@@ -7,6 +7,25 @@ module "vpc" {
   ops_subnets     = var.ops_subnets
   azs             = var.azs
   environment     = var.environment
+
+  fe_allowed_ingress = [
+    { from_port = 80, to_port = 80, protocol = "tcp", cidr = "0.0.0.0/0" },
+    { from_port = 443, to_port = 443, protocol = "tcp", cidr = "0.0.0.0/0" }
+  ]
+
+  be_allowed_ingress = [
+    { from_port = 80, to_port = 80, protocol = "tcp", sg_source = module.vpc.fe_sg },      # Allow frontend to backend
+  ]
+
+  db_allowed_ingress = [
+    { from_port = 3306, to_port = 3306, protocol = "tcp", sg_source = module.vpc.be_sg }, # Allow backend to DB
+    { from_port = 6379, to_port = 6379, protocol = "tcp", sg_source = module.vpc.be_sg }  # Allow backend to Redis
+  ]
+
+  ops_allowed_ingress = [
+    { from_port = 51820, to_port = 51820, protocol = "udp", cidr = "0.0.0.0/0" },          # WireGuard VPN
+    # { from_port = 6443, to_port = 6443, protocol = "tcp", sg_source = "sg-vpn-client-id" } # K8s API for admins via VPN
+  ]
 }
 
 module "nlb" {

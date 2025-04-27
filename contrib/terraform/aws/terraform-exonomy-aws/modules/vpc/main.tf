@@ -134,12 +134,13 @@ resource "aws_security_group" "fe_sg" {
   vpc_id = aws_vpc.main.id
 
   dynamic "ingress" {
-    for_each = var.fe_allowed_rules
+    for_each = var.fe_allowed_ingress
     content {
-      from_port   = ingress.value.from_port
-      to_port     = ingress.value.to_port
-      protocol    = ingress.value.protocol
-      cidr_blocks = [ingress.value.cidr]
+      from_port       = ingress.value.from_port
+      to_port         = ingress.value.to_port
+      protocol        = ingress.value.protocol
+      cidr_blocks     = ingress.value.cidr != null ? [ingress.value.cidr] : null
+      security_groups = ingress.value.sg_source != null ? [ingress.value.sg_source] : null
     }
   }
 
@@ -157,12 +158,13 @@ resource "aws_security_group" "be_sg" {
   vpc_id = aws_vpc.main.id
 
   dynamic "ingress" {
-    for_each = var.be_allowed_rules
+    for_each = var.be_allowed_ingress
     content {
-      from_port         = ingress.value.from_port
-      to_port           = ingress.value.to_port
-      protocol          = ingress.value.protocol
-      security_groups   = [ingress.value.sg_source]
+      from_port       = ingress.value.from_port
+      to_port         = ingress.value.to_port
+      protocol        = ingress.value.protocol
+      cidr_blocks     = ingress.value.cidr != null ? [ingress.value.cidr] : null
+      security_groups = ingress.value.sg_source != null ? [ingress.value.sg_source] : null
     }
   }
 
@@ -180,12 +182,13 @@ resource "aws_security_group" "db_sg" {
   vpc_id = aws_vpc.main.id
 
   dynamic "ingress" {
-    for_each = var.db_allowed_rules
+    for_each = var.db_allowed_ingress
     content {
-      from_port         = ingress.value.from_port
-      to_port           = ingress.value.to_port
-      protocol          = ingress.value.protocol
-      security_groups   = [ingress.value.sg_source]
+      from_port       = ingress.value.from_port
+      to_port         = ingress.value.to_port
+      protocol        = ingress.value.protocol
+      cidr_blocks     = ingress.value.cidr != null ? [ingress.value.cidr] : null
+      security_groups = ingress.value.sg_source != null ? [ingress.value.sg_source] : null
     }
   }
 
@@ -203,12 +206,13 @@ resource "aws_security_group" "ops_sg" {
   vpc_id = aws_vpc.main.id
 
   dynamic "ingress" {
-    for_each = var.ops_allowed_rules
+    for_each = var.ops_allowed_ingress
     content {
-      from_port   = ingress.value.from_port
-      to_port     = ingress.value.to_port
-      protocol    = ingress.value.protocol
-      cidr_blocks = [ingress.value.cidr]
+      from_port       = ingress.value.from_port
+      to_port         = ingress.value.to_port
+      protocol        = ingress.value.protocol
+      cidr_blocks     = ingress.value.cidr != null ? [ingress.value.cidr] : null
+      security_groups = ingress.value.sg_source != null ? [ingress.value.sg_source] : null
     }
   }
 
