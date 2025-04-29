@@ -12,3 +12,9 @@ variable "azs" { default = ["eu-central-1a"] }
 variable "environment" { default = "dev" }
 variable "ami_id" {}
 variable "key_pair_name" {}
+
+# EC2 Volume Sizes (GB)
+variable "ops_node_volume_size" { default = 100 }
+variable "db_node_volume_size" { default = 100 }
+variable "be_node_volume_size" { default = 100 }
+variable "fe_node_volume_size" { default = 50 }
