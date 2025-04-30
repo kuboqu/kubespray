@@ -65,3 +65,17 @@ variable "fe_allowed_ingress" {
   ]
 }
 
+variable "bastion_allowed_ingress" {
+  description = "List of bastion ingress rules with flexible sources"
+  type = list(object({
+    from_port = number
+    to_port   = number
+    protocol  = string
+    cidr      = optional(string)
+    sg_source = optional(string)
+  }))
+  default = [
+    { from_port = 22, to_port = 22, protocol = "tcp", cidr = "0.0.0.0/0" },
+  ]
+}
+

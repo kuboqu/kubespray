@@ -1,6 +1,7 @@
 variable "region" { default = "eu-central-1" }
 variable "aws_access_key" {}
 variable "aws_secret_key" {}
+variable "tailscale_auth_key" {}
 
 variable "aws_cluster_name" { description = "Name of AWS Cluster" }
 

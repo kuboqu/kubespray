@@ -14,7 +14,9 @@ key_pair_name = "bohdan@newexchanger.com"
 #Settings AWS ELB
 aws_nlb_api_port    = 6443
 k8s_secure_api_port = 6443
+
 aws_cluster_name    = "exonomy"
+environment = "dev"
 default_tags = {
   Env     = "dev"
   Cluster = "exonomy"
