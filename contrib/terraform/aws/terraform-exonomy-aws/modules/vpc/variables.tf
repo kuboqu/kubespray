@@ -1,3 +1,9 @@
+variable "aws_cluster_name" { description = "Name of Cluster" }
+variable "default_tags" {
+  description = "Default tags for all resources"
+  type        = map(string)
+}
+
 variable "vpc_cidr" {}
 variable "public_subnets" { type = list(string) }
 variable "private_subnets" { type = list(string) }
@@ -58,6 +64,4 @@ variable "fe_allowed_ingress" {
     { from_port = 443, to_port = 443, protocol = "tcp", cidr = "0.0.0.0/0" }
   ]
 }
-
-
 

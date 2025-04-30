@@ -4,17 +4,17 @@ resource "aws_vpc" "main" {
   enable_dns_support   = true
   enable_dns_hostnames = true
 
-  tags = {
-    Name = "${var.environment}-vpc"
-  }
+  tags = merge(var.default_tags, tomap({
+    Name = "kubernetes-${var.aws_cluster_name}-vpc"
+  }))
 }
 
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
 
-  tags = {
-    Name = "${var.environment}-igw"
-  }
+  tags = merge(var.default_tags, tomap({
+    Name = "kubernetes-${var.aws_cluster_name}-internetgw"
+  }))
 }
 ########################################################################
 
@@ -26,9 +26,11 @@ resource "aws_subnet" "public" {
   availability_zone       = element(var.azs, count.index)
   map_public_ip_on_launch = true
 
-  tags = {
-    Name = "${var.environment}-public-subnet-${count.index + 1}"
-  }
+  tags = merge(var.default_tags, tomap({
+    Name                                            = "kubernetes-${var.aws_cluster_name}-${element(var.azs, count.index)}-public"
+    "kubernetes.io/cluster/${var.aws_cluster_name}" = "shared"
+    "kubernetes.io/role/elb"                        = "1"
+  }))
 }
 
 resource "aws_subnet" "private" {
@@ -37,9 +39,11 @@ resource "aws_subnet" "private" {
   cidr_block        = element(var.private_subnets, count.index)
   availability_zone = element(var.azs, count.index)
 
-  tags = {
-    Name = "${var.environment}-private-subnet-${count.index + 1}"
-  }
+  tags = merge(var.default_tags, tomap({
+    Name                                            = "kubernetes-${var.aws_cluster_name}-${element(var.azs, count.index)}-private"
+    "kubernetes.io/cluster/${var.aws_cluster_name}" = "shared"
+    "kubernetes.io/role/internal-elb"               = "1"
+  }))
 }
 
 resource "aws_subnet" "db" {
@@ -48,9 +52,11 @@ resource "aws_subnet" "db" {
   cidr_block        = element(var.db_subnets, count.index)
   availability_zone = element(var.azs, count.index)
 
-  tags = {
-    Name = "${var.environment}-db-subnet-${count.index + 1}"
-  }
+  tags = merge(var.default_tags, tomap({
+    Name                                            = "kubernetes-${var.aws_cluster_name}-${element(var.azs, count.index)}-db"
+    "kubernetes.io/cluster/${var.aws_cluster_name}" = "shared"
+    "kubernetes.io/role/internal-elb"               = "1"
+  }))
 }
 
 resource "aws_subnet" "ops" {
@@ -59,9 +65,11 @@ resource "aws_subnet" "ops" {
   cidr_block        = element(var.ops_subnets, count.index)
   availability_zone = element(var.azs, count.index)
 
-  tags = {
-    Name = "${var.environment}-ops-subnet-${count.index + 1}"
-  }
+  tags = merge(var.default_tags, tomap({
+    Name                                            = "kubernetes-${var.aws_cluster_name}-${element(var.azs, count.index)}-ops"
+    "kubernetes.io/cluster/${var.aws_cluster_name}" = "shared"
+    "kubernetes.io/role/internal-elb"               = "1"
+  }))
 }
 ########################################################################
 
@@ -75,62 +83,72 @@ resource "aws_nat_gateway" "nat" {
   allocation_id = aws_eip.nat.id
   subnet_id     = aws_subnet.public[0].id
 
-  tags = {
-    Name = "${var.environment}-nat-gateway"
-  }
+  tags = merge(var.default_tags, tomap({
+    Name = "kubernetes-${var.aws_cluster_name}-nat-gateway"
+  }))
 }
 ########################################################################
 
 # Routing Tables
 # Public Route Table
 resource "aws_route_table" "public" {
+  count  = 1 # TODO: Allow multiple resource instances
   vpc_id = aws_vpc.main.id
 
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.igw.id
   }
-}
 
-resource "aws_route_table_association" "public" {
-  count          = length(aws_subnet.public)
-  subnet_id      = aws_subnet.public[count.index].id
-  route_table_id = aws_route_table.public.id
+  tags = merge(var.default_tags, tomap({
+    Name = "kubernetes-${var.aws_cluster_name}-routetable-public"
+  }))
 }
 
 # Private, DB, OPS Route Tables (with NAT)
 resource "aws_route_table" "private" {
+  count  = 1 # TODO: Allow multiple resource instances
   vpc_id = aws_vpc.main.id
 
   route {
     cidr_block     = "0.0.0.0/0"
     nat_gateway_id = aws_nat_gateway.nat.id
   }
+
+  tags = merge(var.default_tags, tomap({
+    Name = "kubernetes-${var.aws_cluster_name}-routetable-private-${count.index}"
+  }))
+}
+
+resource "aws_route_table_association" "public" {
+  count          = length(aws_subnet.public)
+  subnet_id      = aws_subnet.public[count.index].id
+  route_table_id = aws_route_table.public[count.index % length(aws_route_table.public)].id
 }
 
 resource "aws_route_table_association" "private" {
   count          = length(aws_subnet.private)
   subnet_id      = aws_subnet.private[count.index].id
-  route_table_id = aws_route_table.private.id
+  route_table_id = aws_route_table.private[count.index % length(aws_route_table.private)].id
 }
 
 resource "aws_route_table_association" "db" {
   count          = length(aws_subnet.db)
   subnet_id      = aws_subnet.db[count.index].id
-  route_table_id = aws_route_table.private.id
+  route_table_id = aws_route_table.private[count.index % length(aws_route_table.private)].id
 }
 
 resource "aws_route_table_association" "ops" {
   count          = length(aws_subnet.ops)
   subnet_id      = aws_subnet.ops[count.index].id
-  route_table_id = aws_route_table.private.id
+  route_table_id = aws_route_table.private[count.index % length(aws_route_table.private)].id
 }
 ########################################################################
 
 # Security Groups
 # Frontend
 resource "aws_security_group" "fe_sg" {
-  name   = "${var.environment}-fe-sg"
+  name   = "kubernetes-${var.aws_cluster_name}-fe-sg"
   vpc_id = aws_vpc.main.id
 
   dynamic "ingress" {
@@ -150,11 +168,15 @@ resource "aws_security_group" "fe_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  tags = merge(var.default_tags, tomap({
+    Name = "kubernetes-${var.aws_cluster_name}-fe-sg"
+  }))
 }
 
 # Backend
 resource "aws_security_group" "be_sg" {
-  name   = "${var.environment}-be-sg"
+  name   = "kubernetes-${var.aws_cluster_name}-be-sg"
   vpc_id = aws_vpc.main.id
 
   dynamic "ingress" {
@@ -174,11 +196,15 @@ resource "aws_security_group" "be_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  tags = merge(var.default_tags, tomap({
+    Name = "kubernetes-${var.aws_cluster_name}-be-sg"
+  }))
 }
 
 # Database
 resource "aws_security_group" "db_sg" {
-  name   = "${var.environment}-db-sg"
+  name   = "kubernetes-${var.aws_cluster_name}-db-sg"
   vpc_id = aws_vpc.main.id
 
   dynamic "ingress" {
@@ -198,11 +224,15 @@ resource "aws_security_group" "db_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  tags = merge(var.default_tags, tomap({
+    Name = "kubernetes-${var.aws_cluster_name}-db-sg"
+  }))
 }
 
 # Ops Node (VPN + K8s Control Plane)
 resource "aws_security_group" "ops_sg" {
-  name   = "${var.environment}-ops-sg"
+  name   = "kubernetes-${var.aws_cluster_name}-ops-sg"
   vpc_id = aws_vpc.main.id
 
   dynamic "ingress" {
@@ -222,5 +252,9 @@ resource "aws_security_group" "ops_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  tags = merge(var.default_tags, tomap({
+    Name = "kubernetes-${var.aws_cluster_name}-ops-sg"
+  }))
 }
 ########################################################################
