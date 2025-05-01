@@ -1,18 +1,33 @@
 [all]
-ops-node ansible_host=${ops_node_ip}
-db-node ansible_host=${db_node_ip}
-%{ for ip in workload_nodes_ips ~}
-workload-node-${index(ip)+1} ansible_host=${ip}
-%{ endfor }
+${bastion_node_connection_string}
+${ops_node_connection_string}
+${db_node_connection_string}
+${be_node_connection_string}
+${fe_node_connection_string}
+
+[bastion]
+${bastion_node_list}
 
 [kube_control_plane]
-ops-node
-
-[etcd]
-ops-node
+${ops_node_list}
 
 [kube_node]
-db-node
-%{ for ip in workload_nodes_ips ~}
-workload-node-${index(ip)+1}
-%{ endfor }
+${db_node_list}
+${be_node_list}
+${fe_node_list}
+
+[etcd]
+${ops_node_list}
+
+[k8s_cluster:children]
+kube_control_plane
+kube_node
+
+[k8s_cluster:vars]
+${nlb_api_fqdn}
+
+[all:vars]
+ansible_user="${node_user}"
+ansible_ssh_common_args="-o IdentitiesOnly=yes"
+ansible_ssh_private_key_file="${ssh_private_key_file}"
+local_release_dir="${ansible_local_release_dir}" 

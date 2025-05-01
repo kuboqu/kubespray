@@ -19,12 +19,16 @@ variable "k8s_secure_api_port" { description = "Secure Port of K8S API Server" }
 variable "environment" { default = "dev" }
 variable "ami_id" {}
 variable "key_pair_name" {}
+variable "inventory_file" {}
+variable "ansible_local_release_dir" { default = "{{ansible_env.HOME}}/releases" }
+variable "ssh_private_key_file" {}
 
 # EC2 Volume Sizes (GB)
 variable "ops_node_volume_size" { default = 100 }
 variable "db_node_volume_size" { default = 100 }
 variable "be_node_volume_size" { default = 100 }
 variable "fe_node_volume_size" { default = 50 }
+variable "node_user" { default = "ubuntu" }
 
 variable "default_tags" {
   description = "Default tags for all resources"

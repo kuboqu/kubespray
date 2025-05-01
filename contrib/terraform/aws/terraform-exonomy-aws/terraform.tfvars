@@ -8,15 +8,16 @@ db_subnets      = ["10.100.3.0/24"]
 ops_subnets     = ["10.100.4.0/24"]
 azs             = ["eu-central-1a"]
 
-ami_id        = "ami-03250b0e01c28d196" # Ubuntu Server 24.04 LTS (HVM), SSD Volume Type (64-bit (x86))
-key_pair_name = "bohdan@newexchanger.com"
+ami_id         = "ami-03250b0e01c28d196" # Ubuntu Server 24.04 LTS (HVM), SSD Volume Type (64-bit (x86))
+key_pair_name  = "bohdan@newexchanger.com"
+inventory_file = "hosts.ini"
 
 #Settings AWS ELB
 aws_nlb_api_port    = 6443
 k8s_secure_api_port = 6443
 
-aws_cluster_name    = "exonomy"
-environment = "dev"
+aws_cluster_name = "exonomy"
+environment      = "dev"
 default_tags = {
   Env     = "dev"
   Cluster = "exonomy"

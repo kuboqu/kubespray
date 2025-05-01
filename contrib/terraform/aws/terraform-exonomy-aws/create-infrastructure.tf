@@ -19,29 +19,32 @@ module "vpc" {
     # { from_port = 51820, to_port = 51820, protocol = "udp", cidr = "0.0.0.0/0" },          # WireGuard VPN
     { from_port = 6443, to_port = 6443, protocol = "tcp", cidr = "0.0.0.0/0" },            # K8s API for admins via VPN
     { from_port = 22, to_port = 22, protocol = "tcp", sg_source = module.vpc.bastion_sg }, # SSH Access from bastion
-
+    { from_port = 0, to_port = 0, protocol = "-1", sg_source = module.vpc.bastion_sg },    # Ansible Access from bastion
   ]
 
   db_allowed_ingress = [
     { from_port = 3306, to_port = 3306, protocol = "tcp", sg_source = module.vpc.be_sg },  # Allow backend to DB
     { from_port = 6379, to_port = 6379, protocol = "tcp", sg_source = module.vpc.be_sg },  # Allow backend to Redis
     { from_port = 22, to_port = 22, protocol = "tcp", sg_source = module.vpc.bastion_sg }, # SSH Access from bastion
-
+    { from_port = 0, to_port = 0, protocol = "-1", sg_source = module.vpc.bastion_sg },    # Ansible Access from bastion
   ]
 
   be_allowed_ingress = [
     { from_port = 80, to_port = 80, protocol = "tcp", sg_source = module.vpc.fe_sg },      # Allow frontend to backend
     { from_port = 22, to_port = 22, protocol = "tcp", sg_source = module.vpc.bastion_sg }, # SSH Access from bastion
+    { from_port = 0, to_port = 0, protocol = "-1", sg_source = module.vpc.bastion_sg },    # Ansible Access from bastion
   ]
 
   fe_allowed_ingress = [
     { from_port = 80, to_port = 80, protocol = "tcp", cidr = "0.0.0.0/0" },
     { from_port = 443, to_port = 443, protocol = "tcp", cidr = "0.0.0.0/0" },
     { from_port = 22, to_port = 22, protocol = "tcp", sg_source = module.vpc.bastion_sg }, # SSH Access from bastion
+    { from_port = 0, to_port = 0, protocol = "-1", sg_source = module.vpc.bastion_sg },    # Ansible Access from bastion
   ]
 
   bastion_allowed_ingress = [
     { from_port = 22, to_port = 22, protocol = "tcp", cidr = "0.0.0.0/0" }, # SSH Access
+    { from_port = 0, to_port = 0, protocol = "-1", cidr = "0.0.0.0/0" },    # Ansible Access
   ]
 }
 
@@ -169,29 +172,39 @@ resource "aws_instance" "bastion_node" {
   }))
 }
 
-# /*
-# * Create Kubespray Inventory File
-# *
-# */
-# locals {
-#   inventory_rendered = templatefile("${path.module}/templates/inventory.tpl", {
-#     # public_ip_address_bastion = join("\n", formatlist("bastion ansible_host=%s", aws_instance.bastion-server.*.public_ip))
-#     connection_strings_master = join("\n", formatlist("%s ansible_host=%s", aws_instance.k8s-master.*.private_dns, aws_instance.k8s-master.*.private_ip))
-#     connection_strings_node   = join("\n", formatlist("%s ansible_host=%s", aws_instance.k8s-worker.*.private_dns, aws_instance.k8s-worker.*.private_ip))
-#     list_master               = join("\n", aws_instance.k8s-master.*.private_dns)
-#     list_node                 = join("\n", aws_instance.k8s-worker.*.private_dns)
-#     connection_strings_etcd   = join("\n", formatlist("%s ansible_host=%s", aws_instance.k8s-etcd.*.private_dns, aws_instance.k8s-etcd.*.private_ip))
-#     list_etcd                 = join("\n", ((var.aws_etcd_num > 0) ? aws_instance.k8s-etcd.*.private_dns : aws_instance.k8s-master.*.private_dns))
-#     nlb_api_fqdn              = "apiserver_loadbalancer_domain_name=\"${module.aws-nlb.aws_nlb_api_fqdn}\""
-#   })
-# }
+# Create Kubespray Inventory File
+locals {
+  inventory_rendered = templatefile("${path.module}/templates/inventory.tpl", {
+    bastion_node_connection_string = format("%s ansible_host=%s", format("%s-%s-bastion_node", var.aws_cluster_name, var.environment), aws_instance.bastion_node.public_ip)
+    ops_node_connection_string     = join("\n", [for idx, inst in aws_instance.ops_node : format("%s-%s-ops_node-%d ansible_host=%s", var.aws_cluster_name, var.environment, idx, inst.private_dns)])
+    db_node_connection_string = join("\n", [for idx, inst in aws_instance.db_node : format("%s-%s-db_node-%d ansible_host=%s", var.aws_cluster_name, var.environment, idx, inst.private_dns)])
+    be_node_connection_string = join("\n", [for idx, inst in aws_instance.be_node : format("%s-%s-be_node-%d ansible_host=%s", var.aws_cluster_name, var.environment, idx, inst.private_dns)])
+    fe_node_connection_string = join("\n", [for idx, inst in aws_instance.fe_node : format("%s-%s-fe_node-%d ansible_host=%s", var.aws_cluster_name, var.environment, idx, inst.private_dns)])
 
-# resource "null_resource" "inventories" {
-#   provisioner "local-exec" {
-#     command = "echo '${local.inventory_rendered}' > ${var.inventory_file}"
-#   }
+    bastion_node_list = format("%s", format("%s-%s-bastion_node", var.aws_cluster_name, var.environment))
+    ops_node_list     = join("\n", formatlist("%s-%s-ops_node-%d", var.aws_cluster_name, var.environment, range(length(aws_instance.ops_node))))
+    db_node_list      = join("\n", formatlist("%s-%s-db_node-%d", var.aws_cluster_name, var.environment, range(length(aws_instance.db_node))))
+    be_node_list      = join("\n", formatlist("%s-%s-be_node-%d", var.aws_cluster_name, var.environment, range(length(aws_instance.be_node))))
+    fe_node_list      = join("\n", formatlist("%s-%s-fe_node-%d", var.aws_cluster_name, var.environment, range(length(aws_instance.fe_node))))
 
-#   triggers = {
-#     template = local.inventory_rendered
-#   }
-# }
+    nlb_api_fqdn              = "apiserver_loadbalancer_domain_name=\"${module.nlb.nlb_api_fqdn}\""
+    node_user                 = var.node_user
+    ssh_private_key_file      = var.ssh_private_key_file
+    ansible_local_release_dir = var.ansible_local_release_dir
+  })
+}
+
+resource "null_resource" "inventories" {
+  provisioner "local-exec" {
+    command = <<EOT
+    cat <<EOF > ${var.inventory_file}
+    ${local.inventory_rendered}
+    EOF
+    EOT
+  }
+
+  triggers = {
+    template = local.inventory_rendered
+  }
+}
+
