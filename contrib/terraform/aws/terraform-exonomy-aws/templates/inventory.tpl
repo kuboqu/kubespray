@@ -19,15 +19,17 @@ ${fe_node_list}
 [etcd]
 ${ops_node_list}
 
+[calico_rr]
+
 [k8s_cluster:children]
 kube_control_plane
 kube_node
+calico_rr
 
 [k8s_cluster:vars]
 ${nlb_api_fqdn}
 
 [all:vars]
 ansible_user="${node_user}"
-ansible_ssh_common_args="-o IdentitiesOnly=yes"
 ansible_ssh_private_key_file="${ssh_private_key_file}"
 local_release_dir="${ansible_local_release_dir}" 

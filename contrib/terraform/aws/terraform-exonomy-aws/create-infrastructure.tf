@@ -176,16 +176,16 @@ resource "aws_instance" "bastion_node" {
 locals {
   inventory_rendered = templatefile("${path.module}/templates/inventory.tpl", {
     bastion_node_connection_string = format("%s ansible_host=%s", format("%s-%s-bastion_node", var.aws_cluster_name, var.environment), aws_instance.bastion_node.public_ip)
-    ops_node_connection_string     = join("\n", [for idx, inst in aws_instance.ops_node : format("%s-%s-ops_node-%d ansible_host=%s", var.aws_cluster_name, var.environment, idx, inst.private_dns)])
-    db_node_connection_string = join("\n", [for idx, inst in aws_instance.db_node : format("%s-%s-db_node-%d ansible_host=%s", var.aws_cluster_name, var.environment, idx, inst.private_dns)])
-    be_node_connection_string = join("\n", [for idx, inst in aws_instance.be_node : format("%s-%s-be_node-%d ansible_host=%s", var.aws_cluster_name, var.environment, idx, inst.private_dns)])
-    fe_node_connection_string = join("\n", [for idx, inst in aws_instance.fe_node : format("%s-%s-fe_node-%d ansible_host=%s", var.aws_cluster_name, var.environment, idx, inst.private_dns)])
+    ops_node_connection_string     = join("\n", [for idx, inst in aws_instance.ops_node : format("%s ansible_host=%s", inst.private_dns, inst.private_ip)])
+    db_node_connection_string      = join("\n", [for idx, inst in aws_instance.db_node : format("%s ansible_host=%s", inst.private_dns, inst.private_ip)])
+    be_node_connection_string      = join("\n", [for idx, inst in aws_instance.be_node : format("%s ansible_host=%s", inst.private_dns, inst.private_ip)])
+    fe_node_connection_string      = join("\n", [for idx, inst in aws_instance.fe_node : format("%s ansible_host=%s", inst.private_dns, inst.private_ip)])
 
     bastion_node_list = format("%s", format("%s-%s-bastion_node", var.aws_cluster_name, var.environment))
-    ops_node_list     = join("\n", formatlist("%s-%s-ops_node-%d", var.aws_cluster_name, var.environment, range(length(aws_instance.ops_node))))
-    db_node_list      = join("\n", formatlist("%s-%s-db_node-%d", var.aws_cluster_name, var.environment, range(length(aws_instance.db_node))))
-    be_node_list      = join("\n", formatlist("%s-%s-be_node-%d", var.aws_cluster_name, var.environment, range(length(aws_instance.be_node))))
-    fe_node_list      = join("\n", formatlist("%s-%s-fe_node-%d", var.aws_cluster_name, var.environment, range(length(aws_instance.fe_node))))
+    ops_node_list     = join("\n", [for idx, inst in aws_instance.ops_node : format("%s", inst.private_dns)])
+    db_node_list      = join("\n", [for idx, inst in aws_instance.db_node : format("%s", inst.private_dns)])
+    be_node_list      = join("\n", [for idx, inst in aws_instance.be_node : format("%s", inst.private_dns)])
+    fe_node_list      = join("\n", [for idx, inst in aws_instance.fe_node : format("%s", inst.private_dns)])
 
     nlb_api_fqdn              = "apiserver_loadbalancer_domain_name=\"${module.nlb.nlb_api_fqdn}\""
     node_user                 = var.node_user
@@ -197,14 +197,14 @@ locals {
 resource "null_resource" "inventories" {
   provisioner "local-exec" {
     command = <<EOT
-    cat <<EOF > ${var.inventory_file}
-    ${local.inventory_rendered}
-    EOF
-    EOT
+cat <<EOF > ${var.inventory_file}
+${local.inventory_rendered}
+EOF
+EOT
   }
 
   triggers = {
-    template = local.inventory_rendered
+    template = sha256(local.inventory_rendered)
   }
 }
 
