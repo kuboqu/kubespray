@@ -1,11 +1,12 @@
 ---
-# cilium_version: "v1.15.9"
-# cilium_version: "v1.15.8"
-cilium_version: "v1.16.6"
-# cilium_version: "v1.17.0-rc.2"
-# envoy_version: "v1.22.5"
-# envoy_version: "v1.33.0"
-envoy_version: "v1.31.0"
+# cilium_version: "1.15.9"
+# cilium_version: "1.15.8"
+cilium_version: "1.16.6"
+# cilium_version: "1.17.0-rc.2"
+# envoy_version: "1.22.5"
+# envoy_version: "1.33.0"
+envoy_version: "1.31.0"
+# cilium_version: "1.15.9"
 
 # Log-level
 cilium_debug: true

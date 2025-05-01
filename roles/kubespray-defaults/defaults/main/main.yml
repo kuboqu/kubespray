@@ -80,7 +80,9 @@ kube_proxy_nodeport_addresses: >-
 # Set to true to allow pre-checks to fail and continue deployment
 ignore_assert_errors: false
 
+# kube-vip
 kube_vip_enabled: false
+kube_vip_lb_fwdmethod: local
 
 # nginx-proxy configure
 nginx_config_dir: "/etc/nginx"
@@ -306,9 +308,8 @@ deploy_container_engine: "{{ 'k8s_cluster' in group_names or etcd_deployment_typ
 # Container for runtime
 container_manager: containerd
 
-# Enable Node Resource Interface in containerd or CRI-O. Requires crio_version >= v1.26.0
-# or containerd_version >= 1.7.0.
-nri_enabled: false
+# Enable Node Resource Interface plugin for containerd
+nri_enabled: "{{ container_manager == 'containerd' }}"
 
 # Enable Kata Containers as additional container runtime
 # When enabled, it requires `container_manager` different than Docker
@@ -435,8 +436,6 @@ vsphere_csi_enabled: false
 upcloud_csi_enabled: false
 csi_snapshot_controller_enabled: false
 persistent_volumes_enabled: false
-cephfs_provisioner_enabled: false
-rbd_provisioner_enabled: false
 ingress_nginx_enabled: false
 ingress_alb_enabled: false
 cert_manager_enabled: false
@@ -444,6 +443,7 @@ expand_persistent_volumes: false
 metallb_enabled: false
 metallb_speaker_enabled: "{{ metallb_enabled }}"
 argocd_enabled: false
+gateway_api_enabled: false
 
 ## When OpenStack is used, Cinder version can be explicitly specified if autodetection fails (Fixed in 1.9: https://github.com/kubernetes/kubernetes/issues/50461)
 # openstack_blockstorage_version: "v1/v2/auto (default)"
