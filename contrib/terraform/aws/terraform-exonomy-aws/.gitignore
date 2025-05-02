@@ -1,4 +1,0 @@
-*.tfstate*
-.terraform.lock.hcl
-.terraform
-credentials.tfvars
