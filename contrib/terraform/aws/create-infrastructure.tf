@@ -21,9 +21,7 @@ module "vpc" {
     { from_port = 22, to_port = 22, protocol = "tcp", sg_source = module.vpc.bastion_sg }, # SSH Access from bastion
 
     { from_port = 0, to_port = 0, protocol = "-1", sg_source = module.vpc.bastion_sg }, # Ansible Access from bastion
-    { from_port = 0, to_port = 0, protocol = "-1", sg_source = module.vpc.db_sg },      # k8s Access from db_node
-    { from_port = 0, to_port = 0, protocol = "-1", sg_source = module.vpc.be_sg },      # k8s Access from be_node
-    { from_port = 0, to_port = 0, protocol = "-1", sg_source = module.vpc.fe_sg },      # k8s Access from fe_node
+    { from_port = 0, to_port = 0, protocol = "-1", cidr = var.vpc_cidr },      # k8s Access from fe_node
   ]
 
   db_allowed_ingress = [
@@ -32,9 +30,7 @@ module "vpc" {
     { from_port = 22, to_port = 22, protocol = "tcp", sg_source = module.vpc.bastion_sg }, # SSH Access from bastion
 
     { from_port = 0, to_port = 0, protocol = "-1", sg_source = module.vpc.bastion_sg }, # Ansible Access from bastion
-    { from_port = 0, to_port = 0, protocol = "-1", sg_source = module.vpc.ops_sg },     # k8s Access from ops_node
-    { from_port = 0, to_port = 0, protocol = "-1", sg_source = module.vpc.be_sg },      # k8s Access from be_node
-    { from_port = 0, to_port = 0, protocol = "-1", sg_source = module.vpc.fe_sg },      # k8s Access from fe_node
+    { from_port = 0, to_port = 0, protocol = "-1", cidr = var.vpc_cidr },      # k8s Access from fe_node
   ]
 
   be_allowed_ingress = [
@@ -42,9 +38,7 @@ module "vpc" {
     { from_port = 22, to_port = 22, protocol = "tcp", sg_source = module.vpc.bastion_sg }, # SSH Access from bastion
 
     { from_port = 0, to_port = 0, protocol = "-1", sg_source = module.vpc.bastion_sg }, # Ansible Access from bastion
-    { from_port = 0, to_port = 0, protocol = "-1", sg_source = module.vpc.ops_sg },     # k8s Access from ops_node
-    { from_port = 0, to_port = 0, protocol = "-1", sg_source = module.vpc.db_sg },      # k8s Access from db_node
-    { from_port = 0, to_port = 0, protocol = "-1", sg_source = module.vpc.fe_sg },      # k8s Access from fe_node
+    { from_port = 0, to_port = 0, protocol = "-1", cidr = var.vpc_cidr },      # k8s Access from fe_node
   ]
 
   fe_allowed_ingress = [
@@ -53,9 +47,7 @@ module "vpc" {
     { from_port = 22, to_port = 22, protocol = "tcp", sg_source = module.vpc.bastion_sg }, # SSH Access from bastion
 
     { from_port = 0, to_port = 0, protocol = "-1", sg_source = module.vpc.bastion_sg }, # Ansible Access from bastion
-    { from_port = 0, to_port = 0, protocol = "-1", sg_source = module.vpc.ops_sg },     # k8s Access from ops_node
-    { from_port = 0, to_port = 0, protocol = "-1", sg_source = module.vpc.db_sg },      # k8s Access from db_node
-    { from_port = 0, to_port = 0, protocol = "-1", sg_source = module.vpc.be_sg },      # k8s Access from be_node
+    { from_port = 0, to_port = 0, protocol = "-1", cidr = var.vpc_cidr },      # k8s Access from be_node
   ]
 
   bastion_allowed_ingress = [

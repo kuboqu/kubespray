@@ -30,9 +30,9 @@ resource "aws_subnet" "cluster-vpc-subnets-public" {
   cidr_block        = element(var.aws_cidr_subnets_public, count.index)
 
   tags = merge(var.default_tags, tomap({
-    Name = "kubernetes-${var.aws_cluster_name}-${element(var.aws_avail_zones, count.index)}-public"
+    Name                                            = "kubernetes-${var.aws_cluster_name}-${element(var.aws_avail_zones, count.index)}-public"
     "kubernetes.io/cluster/${var.aws_cluster_name}" = "shared"
-    "kubernetes.io/role/elb" = "1"
+    "kubernetes.io/role/elb"                        = "1"
   }))
 }
 
@@ -49,9 +49,9 @@ resource "aws_subnet" "cluster-vpc-subnets-private" {
   cidr_block        = element(var.aws_cidr_subnets_private, count.index)
 
   tags = merge(var.default_tags, tomap({
-    Name = "kubernetes-${var.aws_cluster_name}-${element(var.aws_avail_zones, count.index)}-private"
+    Name                                            = "kubernetes-${var.aws_cluster_name}-${element(var.aws_avail_zones, count.index)}-private"
     "kubernetes.io/cluster/${var.aws_cluster_name}" = "shared"
-    "kubernetes.io/role/internal-elb" = "1"
+    "kubernetes.io/role/internal-elb"               = "1"
   }))
 }
 
