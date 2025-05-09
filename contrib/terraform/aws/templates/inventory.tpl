@@ -26,10 +26,26 @@ kube_control_plane
 kube_node
 calico_rr
 
+# === Custom Node Roles ===
+
+[ops]
+${ops_node_list}
+
+[db]
+${db_node_list}
+
+[be]
+${be_node_list}
+
+[fe]
+${fe_node_list}
+
+# === Global Vars ===
+
 [k8s_cluster:vars]
 ${nlb_api_fqdn}
 
 [all:vars]
 ansible_user="${node_user}"
 ansible_ssh_private_key_file="${ssh_private_key_file}"
-local_release_dir="${ansible_local_release_dir}" 
+local_release_dir="${ansible_local_release_dir}"
