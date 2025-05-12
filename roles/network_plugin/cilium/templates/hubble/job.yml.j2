@@ -15,6 +15,11 @@ spec:
     spec:
       serviceAccount: hubble-generate-certs
       serviceAccountName: hubble-generate-certs
+      tolerations:
+        - operator: Exists
+          effect: NoSchedule
+        - operator: Exists
+          effect: PreferNoSchedule
       containers:
         - name: certgen
           image: "{{ cilium_hubble_certgen_image_repo }}:{{ cilium_hubble_certgen_image_tag }}"

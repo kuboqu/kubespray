@@ -117,10 +117,15 @@ ingress_alb_enabled: false
 
 # Cert manager deployment
 cert_manager_enabled: true
-# cert_manager_namespace: "cert-manager"
-# cert_manager_tolerations:
-#   - key: node-role.kubernetes.io/control-plane
-#     effect: NoSchedule
+cert_manager_namespace: "cert-manager"
+cert_manager_tolerations:
+  - key: "dedicated"
+    operator: "Equal"
+    value: "ops"
+    effect: "NoSchedule"
+  - key: "node-role.kubernetes.io/control-plane"
+    operator: "Exists"
+    effect: "NoSchedule"
 # cert_manager_affinity:
 #  nodeAffinity:
 #    preferredDuringSchedulingIgnoredDuringExecution:
@@ -131,8 +136,9 @@ cert_manager_enabled: true
 #          operator: In
 #          values:
 #          - ""
-# cert_manager_nodeselector:
-#   kubernetes.io/os: "linux"
+cert_manager_nodeselector:
+  kubernetes.io/os: "linux"
+  node-role: ops
 
 # cert_manager_trusted_internal_ca: |
 #   -----BEGIN CERTIFICATE-----
