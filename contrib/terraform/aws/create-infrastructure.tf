@@ -1,11 +1,11 @@
 module "iam" {
   source           = "./modules/iam"
-  aws_cluster_name = "exonomy"
+  aws_cluster_name = var.aws_cluster_name
 }
 
 module "vpc" {
-  aws_cluster_name = var.aws_cluster_name
   source           = "./modules/vpc"
+  aws_cluster_name = var.aws_cluster_name
   vpc_cidr         = var.vpc_cidr
   public_subnets   = var.public_subnets
   private_subnets  = var.private_subnets
