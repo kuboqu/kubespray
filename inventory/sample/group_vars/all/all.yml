@@ -56,7 +56,7 @@ external_cloud_provider: aws
 # https_proxy: ""
 # https_proxy_cert_file: ""
 
-## Refer to roles/kubespray-defaults/defaults/main/main.yml before modifying no_proxy
+## Refer to roles/kubespray_defaults/defaults/main/main.yml before modifying no_proxy
 # no_proxy: ""
 
 ## Some problems may occur when downloading files over https proxy due to ansible bug
