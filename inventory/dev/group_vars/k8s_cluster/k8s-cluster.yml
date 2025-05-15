@@ -161,12 +161,20 @@ ndots: 5
 # remove_default_searchdomains: false
 # Can be coredns, coredns_dual, manual or none
 dns_mode: coredns
-dns_etchosts: |
-  172.18.0.0 hubble.local.exonomy.com
-  172.18.0.0 argocd.local.exonomy.com
-  172.18.0.0 longhorn.local.exonomy.com
-  172.18.0.0 vault.local.exonomy.com
-  172.18.0.0 harbor.local.exonomy.com
+dns_extra_tolerations: &dns_tolerations
+  - operator: "Exists"
+    effect: "NoSchedule"
+  - operator: "Exists"
+    effect: "PreferNoSchedule"
+dns_autoscaler_extra_tolerations: *dns_tolerations
+metrics_server_extra_tolerations: *dns_tolerations
+snapshot_controller_extra_tolerations: *dns_tolerations
+# dns_etchosts: |
+#   172.18.0.0 hubble.local.example.com
+#   172.18.0.0 argocd.local.example.com
+#   172.18.0.0 longhorn.local.example.com
+#   172.18.0.0 vault.local.example.com
+#   172.18.0.0 harbor.local.example.com
 # Set manual server if using a custom cluster DNS server
 # manual_dns_server: 10.x.x.x
 # Enable nodelocal dns cache

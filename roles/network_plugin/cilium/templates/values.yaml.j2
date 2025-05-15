@@ -89,6 +89,8 @@ hubble:
     image:
       repository: {{ cilium_hubble_relay_image_repo }}
       tag: {{ cilium_hubble_relay_image_tag }}
+    tolerations:
+      {{ cilium_hubble_tolerations | to_nice_yaml(indent=2) | indent(6) }}
   ui:
     enabled: {{ cilium_enable_hubble_ui }}
     backend:
@@ -99,6 +101,8 @@ hubble:
       image:
         repository: {{ cilium_hubble_ui_image_repo }}
         tag: {{ cilium_hubble_ui_image_tag }}
+    tolerations:
+      {{ cilium_hubble_tolerations | to_nice_yaml(indent=2) | indent(6) }}
   metrics:
     enabled: {{ cilium_hubble_metrics }}
   export:

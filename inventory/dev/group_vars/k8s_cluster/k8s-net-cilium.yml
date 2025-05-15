@@ -57,7 +57,7 @@ cilium_enable_prometheus: true
 # Only effective when monitor aggregation is set to "medium" or higher.
 # cilium_monitor_aggregation_flags: "all"
 # Kube Proxy Replacement mode (strict/partial)
-# cilium_kube_proxy_replacement: strict
+cilium_kube_proxy_replacement: strict
 
 # If upgrading from Cilium < 1.5, you may want to override some of these options
 # to prevent service disruptions. See also:
@@ -150,6 +150,14 @@ cilium_enable_prometheus: true
 # Hubble
 ### Enable Hubble without install
 cilium_enable_hubble: true
+cilium_hubble_tolerations:
+  - key: "dedicated"
+    operator: "Equal"
+    value: "ops"
+    effect: "NoSchedule"
+  - key: "node-role.kubernetes.io/control-plane"
+    operator: "Exists"
+    effect: "NoSchedule"
 ### Enable Hubble-ui
 ### Installed by default when hubble is enabled. To disable set to false
 # cilium_enable_hubble_ui: "{{ cilium_enable_hubble }}"

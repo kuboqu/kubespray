@@ -32,6 +32,10 @@ spec:
         app.kubernetes.io/name: snapshot-controller
     spec:
       serviceAccountName: snapshot-controller
+{% if metrics_server_extra_tolerations %}
+      tolerations:
+        {{ metrics_server_extra_tolerations | list | to_nice_yaml(indent=2) | indent(8) }}
+{%- endif %}
       containers:
         - name: snapshot-controller
           image: {{ snapshot_controller_image_repo }}:{{ snapshot_controller_image_tag }}
@@ -39,3 +43,7 @@ spec:
           args:
             - "--v=5"
             - "--leader-election={{ 'true' if snapshot_controller_replicas > 1 else 'false' }}"
+{% if snapshot_controller_extra_tolerations %}
+      tolerations:
+        {{ snapshot_controller_extra_tolerations | list | to_nice_yaml(indent=2) | indent(8) }}
+{%- endif %}
